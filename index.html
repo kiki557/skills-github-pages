@@ -93,14 +93,14 @@
     <div class="sample-group">
         <div class="input-group">
             <label>样品名称：</label>
-            <input type="text" style="width:100%" id="name_1" placeholder="请输入样品名称" pattern="[\u4e00-\u9fa5a-zA-Z0-9]+"
+            <input type="text" style="width:100%" id="name_1" placeholder="输入样品名称" pattern="[\u4e00-\u9fa5a-zA-Z0-9]+"
                 required>
         </div>
     </div>
     <div class="sample-group">
         <div class="input-group">
             <label>样品编号：</label>
-            <input type="text" style="width:100%" id="code_1" placeholder="例：S2023001" pattern="[A-Za-z]+[0-9]+"
+            <input type="text" style="width:100%" id="code_1" placeholder="样品编号" pattern="[A-Za-z]+[0-9]+"
                 required>
         </div>
     </div>
@@ -109,12 +109,12 @@
     <div class="sample-group">
         <!-- 调整顺序：先m后V1 -->
         <div class="input-group">
-            <label>m-1（g）:</label>
-            <input type="number" id="m_1" step="0.001" placeholder="输入样本1的质量">
+            <label>m1（g）:</label>
+            <input type="number" id="m_1" step="0.001" placeholder="质量1">
         </div>
         <div class="input-group">
-            <label>V1-1（测定值）:</label>
-            <input type="number" id="v1_1" step="0.001" placeholder="输入样本1的V1值">
+            <label>V1（测定值）:</label>
+            <input type="number" id="v1_1" step="0.001" placeholder="测定值1">
         </div>
     </div>
 
@@ -122,19 +122,19 @@
     <div class="sample-group">
         <!-- 调整顺序：先m后V1 -->
         <div class="input-group">
-            <label>m-2（g）:</label>
-            <input type="number" id="m_2" step="0.01" placeholder="输入样本2的质量">
+            <label>m2（g）:</label>
+            <input type="number" id="m_2" step="0.01" placeholder="质量2">
         </div>
         <div class="input-group">
-            <label>V1-2（测定值）:</label>
-            <input type="number" id="v1_2" step="0.01" placeholder="输入样本2的V1值">
+            <label>V2（测定值）:</label>
+            <input type="number" id="v1_2" step="0.01" placeholder="测定值2">
         </div>
     </div>
 
     <!-- 公共参数 -->
     <div class="sample-group">
         <div class="input-group">
-            <div>固定参数 C = 0.1006</div>
+            <div>C = 0.1006</div>
             <input type="hidden" id="c" value="0.1006">
         </div>
         <div class="input-group">
