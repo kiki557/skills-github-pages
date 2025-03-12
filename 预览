@@ -1,0 +1,393 @@
+<html><head>
+    <title>双样本浓度计算器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 8px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .input-group {
+            margin: 17px 0;
+        }
+
+        input,
+        select {
+            font-size: 16px;
+            width: 70%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 5px;
+            width: 100%;
+            border-radius: 5px;
+            font-size: 20px;
+            margin-top: 20px;
+        }
+
+        .sample-group {
+            /* margin: 5px; */
+            height: 53px;
+            display: flex;
+            padding: 9px;
+            /* border: 2px solid #eee; */
+            border-radius: 8px;
+        }
+
+        .sample-title {
+            color: #007AFF;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        #history {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .record {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            background: #f8f9fa;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+
+        .result-item {
+            margin: 8px 0;
+            padding: 8px;
+            background: #f0faff;
+            border-radius: 5px;
+        }
+
+        .average {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .error-badge {
+            background: #ff4444;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+
+        .history-container {
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .record-content {
+            position: relative;
+            background: #f8f9fa;
+            transition: transform 0.3s ease;
+        }
+
+        .delete-btn {
+            position: absolute;
+            right: -80px;
+            top: 0;
+            width: 80px;
+            height: 100%;
+            background: #ff4444;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: right 0.3s ease;
+        }
+
+        .swiping {
+            transform: translateX(-80px);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 新增样品信息 -->
+    <div class="sample-group">
+        <div class="input-group">
+            <label>样品名称：</label>
+            <input type="text" style="width:100%" id="name_1" placeholder="输入样品名称" pattern="[\u4e00-\u9fa5a-zA-Z0-9]+" required="">
+        </div>
+    </div>
+    <div class="sample-group">
+        <div class="input-group">
+            <label>样品编号：</label>
+            <input type="text" style="width:100%" id="code_1" placeholder="样品编号" pattern="[A-Za-z]+[0-9]+" required="">
+        </div>
+    </div>
+
+    <!-- 样本1输入 -->
+    <div class="sample-group">
+        <!-- 调整顺序：先m后V1 -->
+        <div class="input-group">
+            <label>m1（g）:</label>
+            <input type="number" id="m_1" step="0.001" placeholder="质量1">
+        </div>
+        <div class="input-group">
+            <label>V1（测定值）:</label>
+            <input type="number" id="v1_1" step="0.001" placeholder="测定值1">
+        </div>
+    </div>
+
+    <!-- 样本2输入 -->
+    <div class="sample-group">
+        <!-- 调整顺序：先m后V1 -->
+        <div class="input-group">
+            <label>m2（g）:</label>
+            <input type="number" id="m_2" step="0.01" placeholder="质量2">
+        </div>
+        <div class="input-group">
+            <label>V2（测定值）:</label>
+            <input type="number" id="v1_2" step="0.01" placeholder="测定值2">
+        </div>
+    </div>
+
+    <!-- 公共参数 -->
+    <div class="sample-group">
+        <div class="input-group">
+            <div>C = 0.1006</div>
+            <input type="hidden" id="c" value="0.1006">
+        </div>
+        <div class="input-group">
+            <label>选择K值：</label>
+            <select id="k">
+                <option value="5.83">1号K值 (5.83)</option>
+                <option value="6.31">2号K值 (6.31)</option>
+                <option value="5.80">3号K值 (5.80)</option>
+                <option value="5.70">4号K值 (5.70)</option>
+                <option value="6.25">5号K值 (6.25)</option>
+                <option value="5.30">6号K值 (5.30)</option>
+                <option value="5.53">7号K值 (5.53)</option>
+                <option value="5.46">8号K值 (5.46)</option>
+                <option value="5.18">9号K值 (5.18)</option>
+                <option value="5.95">10号K值 (5.95)</option>
+                <option value="6.12">11号K值 (6.12)</option>
+                <option value="6.32">12号K值 (6.32)</option>
+                <option value="5.55">13号K值 (5.55)</option>
+                <option value="6.38">14号K值 (6.38)</option>
+                <option value="6.40">15号K值 (6.40)</option>
+                <option value="5.79">16号K值 (5.79)</option>
+                <option value="5.71">17号K值 (5.71)</option>
+            </select>
+        </div>
+    </div>
+
+    <button onclick="calculate()">计算双样本</button>
+
+    <!-- 结果展示 -->
+    <div id="results">
+        <h3 style="color:#007AFF;margin:10px;">计算结果：</h3>
+        <div id="currentResult"></div>
+    </div>
+
+    <!-- 历史记录 -->
+    <div id="history">
+        <h3>计算历史记录</h3>
+        <div id="historyList"></div>
+    </div>
+
+    <script>
+        // 固定参数
+        const V2 = 0.03;
+
+        // 计算公式
+        function calculateX(v1, m, c, k) {
+            return ((v1 - V2) * c * 0.014 * k / m) * 100;
+        }
+
+        // 相对误差计算
+        function calculateError(x1, x2) {
+            return Math.abs((x1 - x2) / ((x1 + x2) / 2) * 100).toFixed(2);
+        }
+
+        // 历史记录存储
+        let history = JSON.parse(localStorage.getItem('calcHistory')) || [];
+
+        function calculate() {
+            // 获取所有输入值（注意ID顺序已调整）
+            const inputs = {
+                m_1: parseFloat(document.getElementById('m_1').value),
+                v1_1: parseFloat(document.getElementById('v1_1').value),
+                m_2: parseFloat(document.getElementById('m_2').value),
+                v1_2: parseFloat(document.getElementById('v1_2').value),
+                c: parseFloat(document.getElementById('c').value),
+                k: parseFloat(document.getElementById('k').value)
+            };
+
+            // 输入验证
+            if ([inputs.m_1, inputs.v1_1, inputs.m_2, inputs.v1_2].some(isNaN) ||
+                inputs.m_1 === 0 || inputs.m_2 === 0) {
+                alert("请填写所有数值且质量不能为0");
+                return;
+            }
+
+            // 计算两个X值
+            const x1 = calculateX(inputs.v1_1, inputs.m_1, inputs.c, inputs.k);
+            const x2 = calculateX(inputs.v1_2, inputs.m_2, inputs.c, inputs.k);
+            const avg = ((x1 + x2) / 2).toFixed(2); // 新增平均值计算
+            const error = calculateError(x1, x2);
+
+            // 创建记录
+            const record = {
+                name: document.getElementById('name_1').value,
+                code: document.getElementById('code_1').value,
+                timestamp: new Date().toLocaleString(),
+                ...inputs,
+                x1: x1.toFixed(2),
+                x2: x2.toFixed(2),
+                avg: avg,
+                error: error,
+                // kIndex: getKIndex(inputs.k),
+                kValue: inputs.k
+            };
+
+            // 保存记录
+            history.unshift(record);
+            localStorage.setItem('calcHistory', JSON.stringify(history));
+
+            // 显示结果
+            showResults(record);
+        }
+
+        // 获取K值序号
+        function getKIndex(kValue) {
+            const kOptions = [
+                5.83, 6.31, 5.80, 5.70, 6.25, 5.30, 5.53, 5.46, 5.18,
+                5.95, 6.12, 6.32, 5.55, 6.38, 6.40, 5.79, 5.71
+            ];
+            return kOptions.findIndex(v => v === kValue) + 1;
+        }
+
+        // 显示结果
+        function showResults(current) {
+            document.getElementById('currentResult').innerHTML = `
+        <div class="result-item">
+          <div>X1 = ${current.x1} </div>
+          <div>m1: ${current.m_1}g | V1: ${current.v1_1}</div>
+        </div>
+        <div class="result-item">
+          <div>X2 = ${current.x2} </div>
+          <div>m2: ${current.m_2}g | V2: ${current.v1_2}</div>
+        </div>
+        <div class="result-item average">
+          平均值：${current.avg}%
+        </div>
+        <div class="error-badge">相对误差：${current.error}%</div>
+      `;
+
+            // 生成历史记录
+            let html = '';
+            history.forEach(record => {
+                html += `
+          <div class="record">
+            <div>${record.name} | ${record.code}</div>
+            <div>${record.timestamp}</div>
+            <div>X1=${record.x1} | X2=${record.x2}</div>
+            <div>${record.kValue} | 平均 ${record.avg}</div>
+            <div class="error-badge">误差 ${record.error}%</div>
+          </div>
+        `;
+            });
+            document.getElementById('historyList').innerHTML = html;
+        }
+
+        // 初始化显示历史
+        if (history.length > 0) showResults(history[0]);
+
+           // 新增滑动删除功能
+    let touchStartX = 0;
+    let currentElement = null;
+
+    function handleTouchStart(e) {
+      touchStartX = e.touches[0].clientX;
+      currentElement = e.target.closest('.history-container');
+      document.querySelectorAll('.history-container').forEach(el => {
+        if(el !== currentElement) el.classList.remove('swiping');
+      });
+    }
+
+    function handleTouchMove(e) {
+      if(!currentElement) return;
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - touchStartX;
+      
+      if(Math.abs(deltaX) > 30) {
+        e.preventDefault(); // 防止页面滚动
+      }
+      
+      if(deltaX < -30) { // 向左滑动
+        currentElement.classList.add('swiping');
+      } else {
+        currentElement.classList.remove('swiping');
+      }
+    }
+
+    function handleTouchEnd(e) {
+      if(!currentElement) return;
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - touchStartX;
+      
+      if(deltaX < -60) { // 滑动超过60px触发删除
+        const confirmDelete = confirm("确定要删除此记录吗？");
+        if(confirmDelete) {
+          const index = Array.from(document.querySelectorAll('.history-container'))
+                         .indexOf(currentElement);
+          history.splice(index, 1);
+          localStorage.setItem('calcHistory', JSON.stringify(history));
+          showHistory();
+        }
+      }
+      currentElement.classList.remove('swiping');
+      currentElement = null;
+    }
+
+    // 修改历史记录生成函数
+    function showHistory() {
+      let html = '';
+      history.forEach((record, index) => {
+        html += `
+          <div class="history-container">
+            <div class="record-content">
+              <div class="record">
+                <div class="sample-info">
+                  ${record.sample1.code} ↔ ${record.sample2.code}
+                </div>
+                <div>${record.timestamp}</div>
+                <div>X1=${record.x1}% | X2=${record.x2}%</div>
+                <div class="error-badge">误差 ${record.error}%</div>
+              </div>
+            </div>
+            <div class="delete-btn" onclick="deleteRecord(${index})">删除</div>
+          </div>
+        `;
+      });
+      document.getElementById('historyList').innerHTML = html;
+      
+      // 添加事件监听
+      document.getElementById('historyList').addEventListener('touchstart', handleTouchStart);
+      document.getElementById('historyList').addEventListener('touchmove', handleTouchMove);
+      document.getElementById('historyList').addEventListener('touchend', handleTouchEnd);
+    }
+
+    // 直接删除函数
+    function deleteRecord(index) {
+      history.splice(index, 1);
+      localStorage.setItem('calcHistory', JSON.stringify(history));
+      showHistory();
+    }
+    </script>
+</body></html>
