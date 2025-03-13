@@ -85,11 +85,13 @@
             position: relative;
             overflow: hidden;
             transition: transform 0.3s ease;
+            z-index: 0;  /* 容器放在最底层 */
         }
 
         .record-content {
             position: relative;
             background: #f8f9fa;
+            z-index: 1; /* 确保内容在按钮上层 */
             transition: transform 0.3s ease;
         }
 
@@ -103,6 +105,7 @@
             justify-content: center;
             color: white;
             font-size: 14px;
+            z-index: 2; /* 确保按钮可见 */
         }
 
         .edit-btn {
@@ -112,7 +115,7 @@
 
         .delete-btn {
             background: #ff4444;
-            right: -80px;
+            right: -160px;
         }
 
         .swiping {
