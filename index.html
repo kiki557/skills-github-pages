@@ -342,6 +342,7 @@
 
         // 初始化显示历史
         if (history.length > 0) showResults(history[0]);
+
         // 触摸事件处理
         let touchStartX = 0;
         let touchStartTime = 0;
@@ -458,27 +459,25 @@
 
         // 修改showResults函数
         function showResults(current) {
-            // 获取搜索关键词
             const searchKeyword = document.getElementById('searchInput').value;
-
-            // 过滤历史记录
             const filteredHistory = filterHistory(searchKeyword);
 
-            // 计算结果
             if (current) {
                 document.getElementById('currentResult').innerHTML = `
-                <div class="result-item">
-                <div>X1 = ${current.x1} </div>
-                <div>m1: ${current.m_1}g | V1: ${current.v1_1}</div>
+                <div>
+                    <div class="result-item">
+                        <div>X1 = ${current.x1} </div>
+                        <div>m1: ${current.m_1}g | V1: ${current.v1_1}</div>
+                    </div>
+                    <div class="result-item">
+                        <div>X2 = ${current.x2} </div>
+                        <div>m2: ${current.m_2}g | V2: ${current.v1_2}</div>
+                    </div>
+                    <div class="result-item average">
+                        平均值：${current.avg}%
+                    </div>
+                    <div class="error-badge">相对误差：${current.error}%</div>
                 </div>
-                <div class="result-item">
-                <div>X2 = ${current.x2} </div>
-                <div>m2: ${current.m_2}g | V2: ${current.v1_2}</div>
-                </div>
-                <div class="result-item average">
-                平均值：${current.avg}%
-                </div>
-                <div class="error-badge">相对误差：${current.error}%</div>
             `;
             }
 
@@ -487,7 +486,7 @@
             filteredHistory.forEach((record, index) => {
                 // 保持data-index使用原始索引
                 html += `
-            <div class="swipe-container" data-index="${history.indexOf(record)}">
+                    < div class="swipe-container" data - index="${history.indexOf(record)}" >
                 <div class="delete-confirm">删除</div>
                 <div class="record-content">
                     <div>${record.name} | ${record.code}</div>
@@ -496,7 +495,7 @@
                     <div>K值：${record.kValue} | 平均 ${record.avg}</div>
                     <div class="error-badge">误差 ${record.error}%</div>
                 </div>
-            </div>
+            </div >
         `;
             });
             document.getElementById('historyList').innerHTML = html;
@@ -514,6 +513,51 @@
             localStorage.setItem('calcHistory', JSON.stringify(history));
             showResults(); // 重新渲染时会自动应用当前搜索条件
         }
+
+        // 生成历史记录时使用唯一标识
+        let html = '';
+        filteredHistory.forEach(record => {
+            // 添加唯一标识
+            const originalIndex = history.findIndex(r => r.timestamp === record.timestamp);
+            html += `
+                <div class="swipe-container" data-index="${originalIndex}">
+                    <div class="delete-confirm">删除</div>
+                    <div class="record-content">
+                        <!-- 原有记录内容 -->
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('historyList').innerHTML = html;
+
+        // 每次渲染后重新绑定删除事件
+        bindDeleteEvents();
+
+        // 新增绑定删除事件函数
+        function bindDeleteEvents() {
+            document.querySelectorAll('.delete-confirm').forEach(btn => {
+                // 移除旧的事件监听器
+                btn.replaceWith(btn.cloneNode(true));
+            });
+
+            document.querySelectorAll('.delete-confirm').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const container = this.parentElement;
+                    if (confirm('确定删除？')) {
+                        const index = parseInt(container.dataset.index);
+                        if (index >= 0 && index < history.length) {
+                            history.splice(index, 1);
+                            localStorage.setItem('calcHistory', JSON.stringify(history));
+                            showResults(); // 重新渲染列表
+                        }
+                    }
+                });
+            });
+        }
+
+        // 初始化时绑定一次
+        bindDeleteEvents();
     </script>
 </body>
 
