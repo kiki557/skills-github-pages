@@ -1,4 +1,7 @@
-<html><head>
+<!DOCTYPE html>
+<html>
+
+<head>
     <title>双样本浓度计算器</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
@@ -35,9 +38,11 @@
         }
 
         .sample-group {
+            /* margin: 5px; */
             height: 53px;
             display: flex;
             padding: 9px;
+            /* border: 2px solid #eee; */
             border-radius: 8px;
         }
 
@@ -54,6 +59,8 @@
         }
 
         .record {
+            position: relative;
+            transition: transform 0.3s ease;
             padding: 10px;
             border-bottom: 1px solid #eee;
             background: #f8f9fa;
@@ -81,45 +88,51 @@
             font-size: 0.9em;
         }
 
-        .history-container {
+        /* 添加滑动容器 */
+        .swipe-container {
             position: relative;
             overflow: hidden;
-            transition: transform 0.3s ease;
-            z-index: 0;  /* 容器放在最底层 */
+            border-radius: 5px;
+            margin: 5px 0;
         }
 
-        .record-content {
-            position: relative;
-            background: #f8f9fa;
-            z-index: 1; /* 确保内容在按钮上层 */
-            transition: transform 0.3s ease;
-        }
-
-        .delete-btn, .edit-btn {
+        /* 调整删除按钮定位 */
+        .delete-confirm {
             position: absolute;
+            right: -80px;
+            /* 初始隐藏位置 */
             top: 0;
-            height: 100%;
+            bottom: 0;
             width: 80px;
+            background: #ff4444;
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 14px;
-            z-index: 2; /* 确保按钮可见 */
+            transition: right 0.3s ease;
+            z-index: 1;
+            margin: 5px 0;
+            /* 确保在内容上方 */
         }
 
-        .edit-btn {
-            background: #007AFF;
-            right: -160px;
+        /* 滑动时显示删除按钮 */
+        .swipe-container.active .delete-confirm {
+            right: 0;
         }
 
-        .delete-btn {
-            background: #ff4444;
-            right: -160px;
-        }
+        /* 内容区域需要相对定位 */
+        .record-content {
 
-        .swiping {
-            transform: translateX(-160px);
+            border-bottom: 1px solid #eee;
+            background: #f8f9fa;
+            margin: 5px 0;
+            border-radius: 5px;
+
+            position: relative;
+            z-index: 2;
+            /* 确保在删除按钮上方 */
+            padding: 10px;
+            transition: transform 0.3s ease;
         }
     </style>
 </head>
@@ -129,13 +142,14 @@
     <div class="sample-group">
         <div class="input-group">
             <label>样品名称：</label>
-            <input type="text" style="width:100%" id="name_1" placeholder="输入样品名称" pattern="[\u4e00-\u9fa5a-zA-Z0-9]+" required="">
+            <input type="text" style="width:100%" id="name_1" placeholder="输入样品名称" pattern="[\u4e00-\u9fa5a-zA-Z0-9]+"
+                required>
         </div>
     </div>
     <div class="sample-group">
         <div class="input-group">
             <label>样品编号：</label>
-            <input type="text" style="width:100%" id="code_1" placeholder="样品编号" pattern="[A-Za-z]+[0-9]+" required="">
+            <input type="text" style="width:100%" id="code_1" placeholder="样品编号" pattern="[A-Za-z]+[0-9]+" required>
         </div>
     </div>
 
@@ -168,8 +182,8 @@
     <!-- 公共参数 -->
     <div class="sample-group">
         <div class="input-group">
-            <div>C = 0.1006</div>
-            <input type="hidden" id="c" value="0.1006">
+            <div>C = 0.1004</div>
+            <input type="hidden" id="c" value="0.1004">
         </div>
         <div class="input-group">
             <label>选择K值：</label>
@@ -206,6 +220,14 @@
     <!-- 历史记录 -->
     <div id="history">
         <h3>计算历史记录</h3>
+        <input type="text" id="searchInput" placeholder="搜索所有字段..." style="
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+    ">
         <div id="historyList"></div>
     </div>
 
@@ -260,6 +282,7 @@
                 x2: x2.toFixed(2),
                 avg: avg,
                 error: error,
+                // kIndex: getKIndex(inputs.k),
                 kValue: inputs.k
             };
 
@@ -280,123 +303,218 @@
             return kOptions.findIndex(v => v === kValue) + 1;
         }
 
-        // 显示结果
-        function showResults(current) {
-            document.getElementById('currentResult').innerHTML = `
-        <div class="result-item">
-          <div>X1 = ${current.x1} </div>
-          <div>m1: ${current.m_1}g | V1: ${current.v1_1}</div>
-        </div>
-        <div class="result-item">
-          <div>X2 = ${current.x2} </div>
-          <div>m2: ${current.m_2}g | V2: ${current.v1_2}</div>
-        </div>
-        <div class="result-item average">
-          平均值：${current.avg}%
-        </div>
-        <div class="error-badge">相对误差：${current.error}%</div>
-      `;
+        // 显示结果 旧的 showResults
+        // function showResults(current) {
+        //     document.getElementById('currentResult').innerHTML = `
+        //         <div class="result-item">
+        //         <div>X1 = ${current.x1} </div>
+        //         <div>m1: ${current.m_1}g | V1: ${current.v1_1}</div>
+        //         </div>
+        //         <div class="result-item">
+        //         <div>X2 = ${current.x2} </div>
+        //         <div>m2: ${current.m_2}g | V2: ${current.v1_2}</div>
+        //         </div>
+        //         <div class="result-item average">
+        //         平均值：${current.avg}%
+        //         </div>
+        //         <div class="error-badge">相对误差：${current.error}%</div>
+        //     `;
 
-            // 生成历史记录
-            showHistory();
-        }
+        //     // 生成历史记录
+        //     let html = '';
+        //     history.forEach((record, index) => {
+        //         html += `
+        //             <div class="swipe-container" data-index="${index}">
+        //                 <div class="delete-confirm">删除</div>
+        //                 <div class="record-content">
+        //                     <!-- 原有记录内容 -->
+        //                     <div>${record.name} | ${record.code}</div>
+        //                     <div>${record.timestamp}</div>
+        //                     <div>X1=${record.x1} | X2=${record.x2}</div>
+        //                     <div>K值：${record.kValue} | 平均 ${record.avg}</div>
+        //                     <div class="error-badge">误差 ${record.error}%</div>
+        //                 </div>
+        //             </div>
+        //             `;
+        //     });
+        //     document.getElementById('historyList').innerHTML = html;
+        // }
 
         // 初始化显示历史
         if (history.length > 0) showResults(history[0]);
-
-        // 新增滑动删除功能
+        // 触摸事件处理
         let touchStartX = 0;
-        let currentElement = null;
+        let touchStartTime = 0;
+        let isSwiping = false;
+        const SWIPE_THRESHOLD = 30;  // 滑动阈值30px
+        const TIME_THRESHOLD = 300;  // 时间阈值300ms
 
-        function handleTouchStart(e) {
-            touchStartX = e.touches[0].clientX;
-            currentElement = e.target.closest('.history-container');
-            document.querySelectorAll('.history-container').forEach(el => {
-                if (el !== currentElement) el.classList.remove('swiping');
-            });
-        }
+        document.getElementById('historyList').addEventListener('touchstart', function (e) {
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartTime = Date.now();
+            isSwiping = false;
+            currentRecord = e.target.closest('.swipe-container');
+        });
 
-        function handleTouchMove(e) {
-            if (!currentElement) return;
+        document.getElementById('historyList').addEventListener('touchmove', function (e) {
+            if (!currentRecord) return;
+
             const touch = e.touches[0];
             const deltaX = touch.clientX - touchStartX;
 
-            if (Math.abs(deltaX) > 30) {
-                e.preventDefault(); // 防止页面滚动
+            // 超过阈值标记为滑动
+            if (Math.abs(deltaX) > 5) {
+                isSwiping = true;
+                e.preventDefault(); // 阻止滚动
             }
 
-            if (deltaX < -30) { // 向左滑动
-                currentElement.classList.add('swiping');
-            } else {
-                currentElement.classList.remove('swiping');
+            if (isSwiping) {
+                const content = currentRecord.querySelector('.record-content');
+                const button = currentRecord.querySelector('.delete-confirm');
+
+                content.style.transform = `translateX(${deltaX}px)`;
+                button.style.transform = `translateX(${deltaX}px)`;
             }
-        }
+        });
 
-        function handleTouchEnd(e) {
-            if (!currentElement) return;
-            const touch = e.changedTouches[0];
-            const deltaX = touch.clientX - touchStartX;
+        document.getElementById('historyList').addEventListener('touchend', function (e) {
+            if (!currentRecord) return;
 
-            if (deltaX < -60) { // 滑动超过60px触发删除
-                const confirmDelete = confirm("确定要删除此记录吗？");
-                if (confirmDelete) {
-                    const index = Array.from(document.querySelectorAll('.history-container'))
-                        .indexOf(currentElement);
-                    history.splice(index, 1);
-                    localStorage.setItem('calcHistory', JSON.stringify(history));
-                    showHistory();
+            const deltaX = e.changedTouches[0].clientX - touchStartX;
+            const deltaTime = Date.now() - touchStartTime;
+            const content = currentRecord.querySelector('.record-content');
+            const button = currentRecord.querySelector('.delete-confirm');
+            // debugger
+
+            // 滑动处理
+            if (isSwiping) {
+                if (deltaX < -SWIPE_THRESHOLD) {
+                    content.style.transform = 'translateX(-80px)';
+                    button.style.transform = 'translateX(-80px)';
+                } else {
+                    content.style.transform = 'translateX(0)';
                 }
+                return; // 如果是滑动操作，不执行点击
             }
-            currentElement.classList.remove('swiping');
-            currentElement = null;
+
+            // 点击处理（同时满足以下条件）
+            if (deltaTime < TIME_THRESHOLD && Math.abs(deltaX) < 5) {
+                const index = parseInt(currentRecord.dataset.index);
+                const data = history[index];
+
+                // 填充表单
+                document.getElementById('name_1').value = data.name;
+                document.getElementById('code_1').value = data.code;
+                document.getElementById('m_1').value = data.m_1;
+                document.getElementById('v1_1').value = data.v1_1;
+                document.getElementById('m_2').value = data.m_2;
+                document.getElementById('v1_2').value = data.v1_2;
+                document.getElementById('k').value = data.kValue;
+            }
+        });
+
+        // 删除按钮点击处理（保持之前逻辑）
+        document.querySelectorAll('.delete-confirm').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation(); // 阻止事件冒泡
+                // 原有删除逻辑...
+            });
+        });
+
+        document.querySelectorAll('.delete-confirm').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const container = this.parentElement;
+                if (confirm('确定删除？')) {
+                    container.style.transform = 'translateX(-100%)';
+                    setTimeout(() => {
+                        const index = parseInt(container.dataset.index);
+                        history.splice(index, 1);
+                        localStorage.setItem('calcHistory', JSON.stringify(history));
+                        showResults(history[0] || {});
+                    }, 300);
+                }
+            });
+        });
+
+
+        // 新增搜索函数
+        function filterHistory(keyword) {
+            return history.filter(record => {
+                const searchString = [
+                    record.name,
+                    record.code,
+                    record.timestamp,
+                    record.x1,
+                    record.x2,
+                    record.avg,
+                    record.error,
+                    record.kValue
+                ].join('|').toLowerCase();
+
+                return searchString.includes(keyword.toLowerCase());
+            });
         }
 
-        // 修改历史记录生成函数
-        function showHistory() {
-            let html = '';
-            history.forEach((record, index) => {
-                html += `
-          <div class="history-container">
-            <div class="record-content">
-              <div class="record">
-                <div class="sample-info">
-                  ${record.name} | ${record.code}
+        // 修改showResults函数
+        function showResults(current) {
+            // 获取搜索关键词
+            const searchKeyword = document.getElementById('searchInput').value;
+
+            // 过滤历史记录
+            const filteredHistory = filterHistory(searchKeyword);
+
+            // 计算结果
+            if (current) {
+                document.getElementById('currentResult').innerHTML = `
+                <div class="result-item">
+                <div>X1 = ${current.x1} </div>
+                <div>m1: ${current.m_1}g | V1: ${current.v1_1}</div>
                 </div>
-                <div>${record.timestamp}</div>
-                <div>X1=${record.x1}% | X2=${record.x2}%</div>
-                <div class="error-badge">误差 ${record.error}%</div>
-              </div>
+                <div class="result-item">
+                <div>X2 = ${current.x2} </div>
+                <div>m2: ${current.m_2}g | V2: ${current.v1_2}</div>
+                </div>
+                <div class="result-item average">
+                平均值：${current.avg}%
+                </div>
+                <div class="error-badge">相对误差：${current.error}%</div>
+            `;
+            }
+
+            // 生成历史记录
+            let html = '';
+            filteredHistory.forEach((record, index) => {
+                // 保持data-index使用原始索引
+                html += `
+            <div class="swipe-container" data-index="${history.indexOf(record)}">
+                <div class="delete-confirm">删除</div>
+                <div class="record-content">
+                    <div>${record.name} | ${record.code}</div>
+                    <div>${record.timestamp}</div>
+                    <div>X1=${record.x1} | X2=${record.x2}</div>
+                    <div>K值：${record.kValue} | 平均 ${record.avg}</div>
+                    <div class="error-badge">误差 ${record.error}%</div>
+                </div>
             </div>
-            <div class="edit-btn" onclick="editRecord(${index})">编辑</div>
-            <div class="delete-btn" onclick="deleteRecord(${index})">删除</div>
-          </div>
         `;
             });
             document.getElementById('historyList').innerHTML = html;
-
-            // 添加事件监听
-            document.getElementById('historyList').addEventListener('touchstart', handleTouchStart);
-            document.getElementById('historyList').addEventListener('touchmove', handleTouchMove);
-            document.getElementById('historyList').addEventListener('touchend', handleTouchEnd);
         }
 
-        // 直接删除函数
+        // 添加搜索输入监听
+        document.getElementById('searchInput').addEventListener('input', () => {
+            debugger
+            showResults();
+        });
+
+        // 在删除记录后保持搜索状态
         function deleteRecord(index) {
             history.splice(index, 1);
             localStorage.setItem('calcHistory', JSON.stringify(history));
-            showHistory();
-        }
-
-        // 编辑记录函数
-        function editRecord(index) {
-            const record = history[index];
-            document.getElementById('name_1').value = record.name;
-            document.getElementById('code_1').value = record.code;
-            document.getElementById('m_1').value = record.m_1;
-            document.getElementById('v1_1').value = record.v1_1;
-            document.getElementById('m_2').value = record.m_2;
-            document.getElementById('v1_2').value = record.v1_2;
-            document.getElementById('k').value = record.kValue;
+            showResults(); // 重新渲染时会自动应用当前搜索条件
         }
     </script>
-</body></html>
+</body>
+
+</html>
