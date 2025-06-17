@@ -270,7 +270,7 @@
             // 计算两个X值
             const x1 = calculateX(inputs.v1_1, inputs.m_1, inputs.c, inputs.k);
             const x2 = calculateX(inputs.v1_2, inputs.m_2, inputs.c, inputs.k);
-            const avg = ((x1 + x2) / 2).toFixed(2); // 新增平均值计算
+            const avg = ((x1 + x2) / 2).toFixed(3); // 新增平均值计算
             const error = calculateError(x1, x2);
 
             // 创建记录
@@ -279,8 +279,8 @@
                 code: document.getElementById('code_1').value,
                 timestamp: new Date().toLocaleString(),
                 ...inputs,
-                x1: x1.toFixed(2),
-                x2: x2.toFixed(2),
+                x1: x1.toFixed(3),
+                x2: x2.toFixed(3),
                 avg: avg,
                 error: error,
                 // kIndex: getKIndex(inputs.k),
@@ -316,7 +316,7 @@
         //         <div>m2: ${current.m_2}g | V2: ${current.v1_2}</div>
         //         </div>
         //         <div class="result-item average">
-        //         平均值：${current.avg}%
+        //         ：${current.avg}%
         //         </div>
         //         <div class="error-badge">相对误差：${current.error}%</div>
         //     `;
@@ -464,7 +464,7 @@
                 <div>m2: ${current.m_2}g | V2: ${current.v1_2}</div>
                 </div>
                 <div class="result-item average">
-                平均值：${current.avg}%
+                ：${current.avg}%
                 </div>
                 <div class="error-badge">相对误差：${current.error}%</div>
             `;
